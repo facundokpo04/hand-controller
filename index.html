@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>ShereCar Robot Controller</title>
+    <meta charset="utf-8">
+
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/smoothness/jquery-ui-1.10.4.custom.css" rel="stylesheet">
+  </head>
+  <body>
+    <div class="navbar navbar-static-top navbar-default">
+      <div class="container">
+        <button class="navbar-toggle">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="/">ShereCar Robot Controller (http://sherecar.org)</a>
+        <div class="nav-collapse">
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+    <div class="container page">
+        <div id="useraction-notice" class="alert alert-info"></div>
+        <div id="useraction-connection" class="well well-sm">
+          <div class="row">
+            <div id="connect-formfield">
+              <div class="col-md-8">
+                <input type="text" class="form-control" id="robot-address" placeholder="Enter Robot's Internet Address">
+              </div>
+              <div class="col-md-4">
+                <button type="button" id="robot-connect" class="btn btn-primary">Connect to robot</button>
+              </div>
+            </div>
+            <div id="connect-status">
+              <div class="col-md-8">
+                <input type="text" class="form-control" id="robot-connect-status" disabled>
+              </div>
+              <div class="col-md-4">
+                
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="content">
+          <div class="row">
+            <div class="col-md-12">
+              <button type="button" id="emergency-stop" class="btn btn-danger btn-block">Emergency Stop</button>
+              <div class="row">
+                <h4>Robot Mode</h4>
+                <ul id="robot_mode" class="nav nav-tabs">
+                  <li class="active"><a href="#control-manual">Button Control</a></li>
+                  <li><a href="#control-slider">Slider Control</a></li>
+                </ul>
+                <!-- Tab panes -->
+                <div class="tab-content">
+                  <div class="tab-pane active" id="control-manual">
+                    <h4>Controls</h4>
+                    <div class="row">
+                      <div class="col-sm-2">
+                        <button type="button" id="control-manual-thumb" class="btn btn-info btn-lg btn-block">Thumb</button>
+                      </div>
+                      <div class="col-sm-2">
+                        <button type="button" id="control-manual-pointer" class="btn btn-info btn-lg btn-block">Pointer</button>
+                      </div>
+                      <div class="col-sm-2">
+                        <button type="button" id="control-manual-middle" class="btn btn-info btn-lg btn-block">Middle</button>
+                      </div>
+                      <div class="col-sm-2">
+                        <button type="button" id="control-manual-ring" class="btn btn-info btn-lg btn-block">Ring</button>
+                      </div>
+                      <div class="col-sm-2">
+                        <button type="button" id="control-manual-pinkie" class="btn btn-info btn-lg btn-block">Pinkie</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="tab-pane" id="control-slider">
+                    <h4>Controls</h4>
+                    <div class="row">
+                      <div class="col-sm-2">
+                        <h5>Thumb</h5>
+                        <div class="col-sm-3">
+                          <div id="control-slider-thumb" style="height:100px;"></div>
+                        </div>
+                        <br>
+                        <span id="control-slider-thumb-value" class="badge">---</span>
+                      </div>
+                      <div class="col-sm-2">
+                        <h5>Pointer</h5>
+                        <div class="col-sm-3">
+                          <div id="control-slider-pointer" style="height:100px;"></div>
+                        </div>
+                        <br>
+                        <span id="control-slider-pointer-value" class="badge">---</span>
+                      </div>
+                      <div class="col-sm-2">
+                        <h5>Middle</h5>
+                        <div class="col-sm-3">
+                          <div id="control-slider-middle" style="height:100px;"></div>
+                        </div>
+                        <br>
+                        <span id="control-slider-middle-value" class="badge">---</span>
+                      </div>
+                      <div class="col-sm-2">
+                        <h5>Ring</h5>
+                        <div class="col-sm-3">
+                          <div id="control-slider-ring" style="height:100px;"></div>
+                        </div>
+                        <br>
+                        <span id="control-slider-ring-value" class="badge">---</span>
+                      </div>
+                      <div class="col-sm-2">
+                        <h5>Pinkie</h5>
+                        <div class="col-sm-3">
+                          <div id="control-slider-pinkie" style="height:100px;"></div>
+                        </div>
+                        <br>
+                        <span id="control-slider-pinkie-value" class="badge">---</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="status row">
+                <h4>Robot Status</h4>
+                <table id='robot-status' class="table table-condensed">
+                  <tr><th>Data</th><th>Value</th></tr>
+                  <tr>
+                    <td></td><td></td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr>
+        <footer class="footer">
+            <p>&copy; ShereCar</p>
+        </footer>
+    </div>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/jquery-ui-1.10.4.custom.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="socket.io/socket.io.js"></script>
+    <script type=text/javascript>
+      // Hide application elements until connection opened
+      $('#useraction-notice').hide();
+      $('#connect-status').hide();
+      $('.content').hide();
+      
+      var socket = '';
+      var robotReady = false;
+      var url = document.URL;
+      
+      $(document).ready(function() {
+        $('#robot-address').val(url);
+        
+        $('#robot-connect').click(connectToRobot);
+      
+        $('#robot_mode a').click(function (e) {
+          e.preventDefault();
+          //sendCommand('change-mode');
+          console.log('Robot Mode Changed');
+          $(this).tab('show');
+        });
+        
+        $('body').on('keydown', function(event){keyboardEvent(event)});
+        $('body').on('keyup', function(event){keyboardEvent(event)});
+        
+        $('#emergency-stop').click(function(){sendCommand('stop')});
+        
+        $('#control-manual-thumb').on('mousedown', function(){sendCommand('manual-thumb-10')});
+        $('#control-manual-pointer').on('mousedown', function(){sendCommand('manual-pointer-10')});
+        $('#control-manual-middle').on('mousedown', function(){sendCommand('manual-middle-10')});
+        $('#control-manual-ring').on('mousedown', function(){sendCommand('manual-ring-10')});
+        $('#control-manual-pinkie').on('mousedown', function(){sendCommand('manual-pinkie-10')});
+        $('#control-manual-thumb').on('mouseup', function(){sendCommand('manual-thumb-170')});
+        $('#control-manual-pointer').on('mouseup', function(){sendCommand('manual-pointer-170')});
+        $('#control-manual-middle').on('mouseup', function(){sendCommand('manual-middle-170')});
+        $('#control-manual-ring').on('mouseup', function(){sendCommand('manual-ring-170')});
+        $('#control-manual-pinkie').on('mouseup', function(){sendCommand('manual-pinkie-170')});
+        
+        $( "#control-slider-thumb" ).slider({
+          orientation: "vertical",
+          range: "min",
+          value: 75,
+          min: 0,
+          max: 180,
+          slide: function( event, ui ) {
+            $('#control-slider-thumb-value').text(ui.value);
+            sendCommand('manual-thumb-'+ui.value);
+          }
+        });
+        $( "#control-slider-pointer" ).slider({
+          orientation: "vertical",
+          range: "min",
+          value: 75,
+          min: 0,
+          max: 180,
+          slide: function( event, ui ) {
+            $('#control-slider-pointer-value').text(ui.value);
+            sendCommand('manual-pointer-'+ui.value);
+          }
+        });
+        $( "#control-slider-middle" ).slider({
+          orientation: "vertical",
+          range: "min",
+          value: 75,
+          min: 0,
+          max: 180,
+          slide: function( event, ui ) {
+            $('#control-slider-middle-value').text(ui.value);
+            sendCommand('manual-middle-'+ui.value);
+          }
+        });
+        $( "#control-slider-ring" ).slider({
+          orientation: "vertical",
+          range: "min",
+          value: 75,
+          min: 0,
+          max: 180,
+          slide: function( event, ui ) {
+            $('#control-slider-ring-value').text(ui.value);
+            sendCommand('manual-ring-'+ui.value);
+          }
+        });
+        $( "#control-slider-pinkie" ).slider({
+          orientation: "vertical",
+          range: "min",
+          value: 75,
+          min: 0,
+          max: 180,
+          slide: function( event, ui ) {
+            $('#control-slider-pinkie-value').text(ui.value);
+            sendCommand('manual-pinkie-'+ui.value);
+          }
+        });
+      });
+      
+      function keyboardEvent (event) {
+        if (event.type == 'keyup') {
+          if (event.keyCode == 32) {
+            sendCommand('manual-thumb-170');
+          }
+          else if (event.keyCode == 74) {
+            sendCommand('manual-pointer-170');
+          }
+          else if (event.keyCode == 75) {
+            sendCommand('manual-middle-170');
+          }
+          else if (event.keyCode == 76) {
+            sendCommand('manual-ring-170');
+          }
+          else if (event.keyCode == 186) {
+            sendCommand('manual-pinkie-170');
+          }
+        }
+        else if (event.type == 'keydown') {
+          if (event.keyCode == 10) {
+            sendCommand('manual-thumb-10');
+          }
+          else if (event.keyCode == 10) {
+            sendCommand('manual-pointer-10');
+          }
+          else if (event.keyCode == 10) {
+            sendCommand('manual-middle-10');
+          }
+          else if (event.keyCode == 10) {
+            sendCommand('manual-ring-10');
+          }
+          else if (event.keyCode == 10) {
+            sendCommand('manual-pinkie-10');
+          }
+        }
+      }
+      function connectToRobot () {
+        var address = $('#robot-address').val();
+        console.log('---attempting to connect to robot');
+        console.log('@' + address);
+        socket = io.connect(address);
+        socket.on('robot status', function (data) {
+          var status = data.data;
+          // Initial connection
+          if (status == 'server connected') {
+            $('#connect-formfield').hide();
+            $('#connect-status').show();
+            $('.content').show();
+            
+            console.log('---Successfully connected to robot');
+            $('#robot-connect-status').val('Connected to: ' + address);
+            robotReady = true;
+          }
+          // Subsequent updates (consider separating into difference calls)
+          else {
+            // Build status table
+            var newStatus = '<tr><th>Data</th><th>Value</th></tr>\n';
+            for (var key in status) {
+              newStatus += '<tr><td>' + key + '</td><td>' + status[key] + '</td></tr>\n';
+            }
+            $("#robot-status").html(newStatus);
+          }
+        });
+        
+        socket.on('log', function (data) {
+          var logData = data.data;
+        });
+      }
+      function sendCommand (command) {
+      if (robotReady) {
+          console.log('---sending command');
+          console.log(command);
+          socket.emit('robot command', { data: command });
+        }
+      }
+    </script>
+  </body>
+</html>
