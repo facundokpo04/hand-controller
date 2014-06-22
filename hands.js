@@ -33,14 +33,14 @@ if (args.indexOf("noArduino") == -1) {
   var fingers = {};
   
   var thumbServo = {
-    pin: 8,
+    pin: 9,
     range: [0, 180],
     type: "standard",
     startAt: 0,
     center: true,
   };
   var pointerServo = {
-    pin: 9,
+    pin: 8,
     range: [0, 180],
     type: "standard",
     startAt: 0,
@@ -84,11 +84,39 @@ app.get('/', function (req, res) {
   res.sendfile(__dirname + '/index.html');
 });
 
+var last_time = (new Date).getTime();
+var num_tries = -1;
+
 // POST can look for timestamp(ms), command, and status
 app.post('/command/', function (req, res) {
-  processRobotCommand (req.body.command);
+  console.log("Post Command");
   
-  updateRobotStatus (req.body.status);
+  curr_time = (new Date).getTime();
+  if (curr_time - last_time < 250) {
+     last_time = curr_time;
+     return;
+  }
+
+  last_time = curr_time;
+ 
+  if( Object.prototype.toString.call( req.body.command ) === '[object Array]' ) {
+    // If the input is an array, then go in finger order: thumb, pointer, middle, ring, pinkie
+    fingerChange("thumb", req.body.command[0]);
+    fingerChange("pointer", req.body.command[1]);
+    fingerChange("middle", req.body.command[2]);
+    fingerChange("ring", req.body.command[3]);
+    fingerChange("pinkie", req.body.command[4]);
+  }
+  else {
+    fingerChange("thumb", req.body.thumb);
+    fingerChange("pointer", req.body.pointer);
+    fingerChange("middle", req.body.middle);
+    fingerChange("ring", req.body.ring);
+    fingerChange("pinkie", req.body.pinkie);
+  }
+  // processRobotCommand (req.body.command);
+  // updateRobotStatus (req.body.status);
+  res.json({ 'state': "hello" });
 });
 
 io.on('connection', function (socket) {
@@ -134,24 +162,13 @@ function updateRobotStatus (updatedData) {
 // ----- Johnny Five -----
 // These should only be called or accessed if "noArduino" is not an option
 
+function motorChange (motor, value) {
+  
+}
+
 function fingerChange (finger, value) {
   console.log("Arduino Change on: " + finger + ", to " + value);
   arduinoServos[finger].to(value);
-  /*if (finger == "thumb") {
-    arduinoServos.thumb.to(value);
-  }
-  else if (finger == "pointer") {
-    arduinoServos.pointer.to(value);
-  }
-  else if (finger == "middle") {
-    arduinoServos.middle.to(value);
-  }
-  else if (finger == "ring") {
-    arduinoServos.ring.to(value);
-  }
-  else if (finger == "pinkie") {
-    arduinoServos.pinkie.to(value);
-  }*/
   
   board.repl.inject({
     s: arduinoServos
@@ -174,12 +191,21 @@ if (args.indexOf("noArduino") == -1) {
     middle = arduinoServos.middle;
     ring = arduinoServos.ring;
     pinkie = arduinoServos.pinkie;
+    
+    var motor;
+    motor = new five.Motor({
+      pin: 5
+    });
    
     // Inject the `servo` hardware into
     // the Repl instance's context;
     // allows direct command line access
     board.repl.inject({
       s: arduinoServos
+    });
+    
+    board.repl.inject({
+      motor: motor
     });
     
     serverStatus.hasArduino = true;

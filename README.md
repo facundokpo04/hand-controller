@@ -14,3 +14,10 @@ The function first looks to see if the "command" variable is an array. If yes, i
 Physical Hand
 -------------
 The hand is a simple plastic/rubber model, where strings pull fingers closed.
+
+Wiring:
+* 8: thumb
+* 9: index
+* 10: middle
+* 11: ring
+* 12: pinkie
