@@ -1,0 +1,23 @@
+{
+ "io": {
+        "enable": [
+            "browser client minification",
+            "browser client etag",
+            "browser client gzip"
+        ],
+        "set": [
+            {
+                "key": "log level",
+                "value": "1"
+            },
+            {
+                "key": "transports",
+                "value": [
+                    "websockets",
+                    "xhr-polling",
+					"htmlfile"
+                ]
+            }
+        ]
+  }
+}

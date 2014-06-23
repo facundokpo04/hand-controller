@@ -1,3 +1,7 @@
+// This script tests the functionality of the Aruidno connected robot hand
+//  It should close, then open all fingers (or vice versa, depending on how the servo motors are set up)
+// This uses node.js and johnny-five
+
 var five = require("johnny-five")
     , board, servo;
 

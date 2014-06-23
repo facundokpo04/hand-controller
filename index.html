@@ -277,7 +277,7 @@
         var address = $('#robot-address').val();
         console.log('---attempting to connect to robot');
         console.log('@' + address);
-        socket = io.connect(address);
+        var socket = io.connect(address);
         socket.on('robot status', function (data) {
           var status = data.data;
           // Initial connection
@@ -306,10 +306,10 @@
         });
       }
       function sendCommand (command) {
-      if (robotReady) {
+        if (robotReady) {
           console.log('---sending command');
           console.log(command);
-          socket.emit('robot command', { data: command });
+          socket.emit('robot command', command);
         }
       }
     </script>
