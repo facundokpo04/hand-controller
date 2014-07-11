@@ -76,7 +76,7 @@ var pinkieServo = {
   startAt: 0,
   center: true, 
 };
-// Unused, but intended for controlling the car the hand would have been mounted on
+// intended for controlling a platform the hand is mounted on
 var throttleServo = {
   pin: 5,
   range: [50, 110],
@@ -88,7 +88,7 @@ var steeringServo = {
   pin: 6,
   range: [50, 110],
   type: "standard",
-  startAt: 75,
+  startAt: 90,
   center: true,
 };
 
@@ -141,10 +141,10 @@ app.get('/', function (req, res) {
 
 /* A outside program can send a HTTP POST call to this for information update
  *  Expects an array of information in 'command' via REST, or direct variable information
- *  Example http address: http://localhost/move/
+ *  Example http address: http://localhost/wave/
  */
-app.post('/move/', function (req, res) {
-  console.log("Http: move function called");
+app.post('/wave/', function (req, res) {
+  console.log("Http: hand wave function called");
   
   // Ignore if there has been a request too soon
   //  Note that this can quickly superseed the socket.io function below 
@@ -271,28 +271,28 @@ function processRobotCommand (command) {
      return; 
   }
   else { 
-    // expects a string split by dashes: "manual-40-40-40-40-40"
+    // expects a string split by dashes: "hand-40-40-40-40-40"
 	  var parsedCommand = command.split("-");
 	  console.log('----- Command: -----');
 	  console.log(parsedCommand);
 	  
+    // commands to johnny five
 	  if (serverStatus.hasArduino) {
-	    // commands to johnny five
 	    // A bit convoluted here: commands are split between '-', with an arbitrary order for each section
 	    // First segment decides the type of command to build
-      if (parsedCommand[0] == 'manual') {
-	      // Expects a five more entries after that, one for each finger: "manual-40-40-40-40-40"
-	      console.log('MANUAL ENTER')
+      if (parsedCommand[0] == 'hand') {
+	      // Expects a five more entries after that, one for each finger: "hand-40-40-40-40-40"
+	      console.log('HAND COMMAND')
 	      fingerChange("thumb", parsedCommand[1]);
 	      fingerChange("pointer", parsedCommand[2]);
 	      fingerChange("middle", parsedCommand[3]);
 	      fingerChange("ring", parsedCommand[4]);
 	      fingerChange("pinkie", parsedCommand[5]);
 	    }
-	    if (parsedCommand[0] == 'robot') {
-	      console.log('ROBOT ENTER')
-	      // Expects a 1:motor, 2:value
-	      robotChange(parsedCommand[1], parsedCommand[2]);
+	    if (parsedCommand[0] == 'platform') {
+	      console.log('PLATFORM COMMAND')
+	      // Expects a 1:motor-type, 2:value, such as "platform-throttle-90"
+	      platformChange(parsedCommand[1], parsedCommand[2]);
 	    }
 	  }
   }
@@ -310,7 +310,7 @@ function updateRobotStatus (updatedData) {
 
 // Update the finger servos
 function fingerChange (finger, value) {
-  console.log("fc - Arduino Change on: " + finger + ", to " + value);
+  console.log("finger - Arduino Change on: " + finger + ", to " + value);
   arduinoServos[finger].to(value);
   
   board.repl.inject({
@@ -319,8 +319,8 @@ function fingerChange (finger, value) {
 }
 
 // Update the driving robot
-function robotChange (motor, value) {
-  console.log("rc - Arduino Change on: " + motor + ", to " + value);
+function platformChange (motor, value) {
+  console.log("platform - Arduino Change on: " + motor + ", to " + value);
   arduinoServos[motor].to(value);
   
   board.repl.inject({
