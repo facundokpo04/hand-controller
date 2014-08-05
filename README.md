@@ -5,6 +5,9 @@ The code also assumes that the hand is mounted on a platform that can move via s
 
 This repository was extended from [rc-car-controller](https://github.com/Self-Driving-Vehicle/rc-car-controller)
 
+Was developed for the Microsoft Kinect Hackathon at Grind Spaces
+http://kinectforwindowshackathon.challengepost.com/
+
 Requirements
 ------------
 * node.js - javascript platform, acts as a server
